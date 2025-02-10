@@ -21,10 +21,6 @@ export class ProductsService {
     private readonly datasource: DataSource,
   ) {}
 
-  findAll() {
-    return this.productRepository.find();
-  }
-
   async create(createProductDto: CreateProductDto) {
     try {
       const { ...productDetails } = createProductDto; //donde se guardaran datos
@@ -38,6 +34,10 @@ export class ProductsService {
     }
   }
 
+  findAll() {
+    return this.productRepository.find();
+  }
+
   async findOne(term: string) {
     let product: Product;
 
@@ -46,10 +46,10 @@ export class ProductsService {
     } else {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       product = await queryBuilder
-      .where('name =: name or unique_key =: unique_key',
+      .where('UPPER(name) =:name or unique_key =:unique_key',
         {
-          name: term,
-          unique_key: term,
+          name: term.toUpperCase(),
+          unique_key: term.toUpperCase(),
         }).getOne();
     }
     if (!product) throw new NotFoundException(`Product not found`);
