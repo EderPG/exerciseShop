@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from './entities/product.entity';
+import { tblProducts } from './entities/product.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { isUUID } from 'class-validator';
@@ -16,17 +16,15 @@ export class ProductsService {
   private readonly logger = new Logger('ProductsService');
 
   constructor(
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    @InjectRepository(tblProducts)
+    private readonly productRepository: Repository<tblProducts>,
     private readonly datasource: DataSource,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
     try {
       const { ...productDetails } = createProductDto; //donde se guardaran datos
-      const product = this.productRepository.create({
-        ...productDetails,
-      });
+      const product = this.productRepository.create({...productDetails,});
       await this.productRepository.save(product);
       return { ...product };
     } catch (error) {
@@ -39,10 +37,10 @@ export class ProductsService {
   }
 
   async findOne(term: string) {
-    let product: Product;
+    let product: tblProducts;
 
     if (isUUID(term)) {
-      product = await this.productRepository.findOneBy({ id: term });
+      product = await this.productRepository.findOneBy({ Product_stringId: term });
     } else {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       product = await queryBuilder
@@ -55,6 +53,26 @@ export class ProductsService {
     if (!product) throw new NotFoundException(`Product not found`);
     return product;
   }
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   private handleExceptions(error: any) {
     if (error.code === '23505') throw new BadRequestException(error.detail);

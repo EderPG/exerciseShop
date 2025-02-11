@@ -5,28 +5,28 @@ export class CreateProductDto{
 
     @IsString()
     @MinLength(1)
-    name: string;
+    Product_stringName: string; //solo funciona con ese nombre ¿?
 
     @IsString()
     @MinLength(1)
-    unique_key: string;
+    uniquekeyProduct: string;
 
     @IsString()
     @MinLength(1)
     @IsOptional()
-    description?: string;
+    descriptionProduct?: string;
 
     @IsNumber()
     @IsPositive()
-    price_buy: number;
+    pricebuyProduct: number;
 
     @IsNumber()
     @IsPositive()
-    price_sell: number;
+    pricesellProduct: number;
 
     @IsInt()
     @IsPositive()
     @IsOptional()
-    stock?: number;
+    stockProduct?: number;
 
 }

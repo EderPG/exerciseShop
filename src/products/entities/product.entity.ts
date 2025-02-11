@@ -2,38 +2,38 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 
 @Entity()
-export class Product{
+export class tblProducts{
     
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    Product_stringId: string;
 
     @Column('text', {
         unique:true,
     })
-    name: string;
+    Product_stringName: string;
 
     @Column('text', {
         unique:true,
     })
-    unique_key: string;
+    Product_stringUniqueKey: string;
 
     @Column('text', {
         nullable: true,
     })
-    description: string;
+    Product_stringDescription: string;
 
     @Column('float',{
         default: 0,
         })
-    price_buy: number;
+    Product_floatPriceBuy: number;
 
     @Column('float',{
         default: 0,
     })
-    price_sell: number;
+    Product_floatPriceSell: number;
 
     @Column('int', {
         default: 0,
     })
-    stock: number;
+    Product_intStock: number;
 }
