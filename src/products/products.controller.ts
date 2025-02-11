@@ -30,20 +30,25 @@ export class ProductsController{
         return this.productsService.findAll(paginationDto);
     }
 
-    @Get(':term')
-    findOne(@Param('term') term:string){
-        return this.productsService.findOne(term);
-    }
-
-    @Get('RangePrice')
+    
+    @Get('RangePrice')  //en proceso todavia
     getProductsPriceRange(
-    @Query('minPrice') minPrice: number,
-    @Query('maxPrice') maxPrice: number,
+        @Query('minPrice') minPrice: number,
+        @Query('maxPrice') maxPrice: number,
     ): Promise<tblProducts[]> {
     return this.productsService.findProductsByPriceRange(minPrice, maxPrice);
-    }
+}
 
 
+@Get('OrderAsc')
+getOrderAsc(){
+    return this.productsService.orderPriceAsc();
+}
 
-    
+@Get(':term')
+findOne(@Param('term') term:string){
+    return this.productsService.findOne(term);
+}
+
+
 }

@@ -49,7 +49,7 @@ export class ProductsService {
     } else {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       product = await queryBuilder
-      .where('UPPER(Product_stringName)=:Product_stringName or Product_stringUniqueKey=:Product_stringUniqueKey',
+      .where('UPPER(Product_stringName)= :Product_stringName or uniquekeyProduct= :Product_stringUniqueKey',
         {
           nameProduct: term.toUpperCase(),
           uniquekeyProduct: term.toUpperCase(),
@@ -60,27 +60,33 @@ export class ProductsService {
   }
 
   async findProductsByPriceRange(minPrice: number, maxPrice: number): Promise<tblProducts[]> {
-    if (isNaN(minPrice) || isNaN(maxPrice)) {
-      throw new Error('Invalid price range');
-    }
-    const queryBuilder = this.productRepository.createQueryBuilder('prod');
+    
+    const queryBuilder = this.productRepository.createQueryBuilder();
     
     const products = await queryBuilder
-      .where('prod.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice', {
+      .where('tblProducts.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice', {
         minPrice,
         maxPrice,
       })
       .getMany();
-  
-    if (products.length === 0) {
-      throw new NotFoundException(`No products found within the price range of ${minPrice} to ${maxPrice}`);
-    }
   
     return products;
   }
   
 
 
+  async orderPriceAsc(){
+    try {
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      const products = await queryBuilder
+      .orderBy('prod.Product_floatPriceBuy', 'ASC')
+      .getMany();
+      return products;  
+    } catch (error) {
+      throw new BadRequestException('Sin datos');
+    }
+    
+  }
 
 
 
