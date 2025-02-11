@@ -10,6 +10,7 @@ import { tblProducts } from './entities/product.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { isUUID } from 'class-validator';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -32,8 +33,12 @@ export class ProductsService {
     }
   }
 
-  findAll() {
-    return this.productRepository.find();
+  findAll(paginationDto:PaginationDto) {
+    const {limit=10, offset=0}= paginationDto;
+    return this.productRepository.find({
+      take: limit,
+      skip: offset,
+    });
   }
 
   async findOne(term: string) {
@@ -44,16 +49,35 @@ export class ProductsService {
     } else {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       product = await queryBuilder
-      .where('UPPER(name) =:name or unique_key =:unique_key',
+      .where('UPPER(Product_stringName)=:Product_stringName or Product_stringUniqueKey=:Product_stringUniqueKey',
         {
-          name: term.toUpperCase(),
-          unique_key: term.toUpperCase(),
+          nameProduct: term.toUpperCase(),
+          uniquekeyProduct: term.toUpperCase(),
         }).getOne();
     }
     if (!product) throw new NotFoundException(`Product not found`);
     return product;
   }
 
+  async findProductsByPriceRange(minPrice: number, maxPrice: number): Promise<tblProducts[]> {
+    if (isNaN(minPrice) || isNaN(maxPrice)) {
+      throw new Error('Invalid price range');
+    }
+    const queryBuilder = this.productRepository.createQueryBuilder('prod');
+    
+    const products = await queryBuilder
+      .where('prod.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice', {
+        minPrice,
+        maxPrice,
+      })
+      .getMany();
+  
+    if (products.length === 0) {
+      throw new NotFoundException(`No products found within the price range of ${minPrice} to ${maxPrice}`);
+    }
+  
+    return products;
+  }
   
 
 

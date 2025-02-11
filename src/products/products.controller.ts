@@ -8,9 +8,12 @@ import {
     Delete,
     ParseUUIDPipe,
     Query,
+    BadRequestException,
   } from '@nestjs/common';
 import { ProductsService } from "./products.service";
+import { tblProducts } from './entities/product.entity';
 import { CreateProductDto } from "./dto/create-product.dto";
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 
 @Controller('products')
@@ -23,8 +26,8 @@ export class ProductsController{
     }
 
     @Get()
-    getAllProducts(){
-        return this.productsService.findAll();
+    getAllProducts(@Query() paginationDto:PaginationDto){
+        return this.productsService.findAll(paginationDto);
     }
 
     @Get(':term')
@@ -32,7 +35,15 @@ export class ProductsController{
         return this.productsService.findOne(term);
     }
 
-    // @Get(byPrice)
+    @Get('RangePrice')
+    getProductsPriceRange(
+    @Query('minPrice') minPrice: number,
+    @Query('maxPrice') maxPrice: number,
+    ): Promise<tblProducts[]> {
+    return this.productsService.findProductsByPriceRange(minPrice, maxPrice);
+    }
+
+
 
     
 }
