@@ -18,10 +18,11 @@ import { CommonModule } from './common/common.module';
       synchronize: true,
       logging: true,
     }),
-    
+
     ProductsModule,
-    
-    CommonModule],
+
+    CommonModule,
+  ],
   controllers: [],
   providers: [],
 })

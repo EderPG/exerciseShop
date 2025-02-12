@@ -19,12 +19,11 @@ export class ProductsService {
   constructor(
     @InjectRepository(tblProducts)
     private readonly productRepository: Repository<tblProducts>,
-    private readonly datasource: DataSource,
   ) {}
 
   private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
     return {
-      Product_stringName: dto.nameProduct,
+      Product_stringName: dto.nameProduct, //Product_stringName
       Product_stringUniqueKey: dto.uniquekeyProduct,
       Product_stringDescription: dto.descriptionProduct,
       Product_floatPriceBuy: dto.pricebuyProduct,
@@ -36,15 +35,15 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     try {
       const productData = this.mapDtoToEntity(createProductDto);
-    const newProduct = this.productRepository.create(productData); 
-    return await this.productRepository.save(newProduct);
+      const newProduct = this.productRepository.create(productData);
+      return await this.productRepository.save(newProduct);
     } catch (error) {
       this.handleExceptions(error);
     }
   }
 
-  findAll(paginationDto:PaginationDto) {
-    const {limit=10, offset=0}= paginationDto;
+  findAll(paginationDto: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto;
     return this.productRepository.find({
       take: limit,
       skip: offset,
@@ -53,64 +52,91 @@ export class ProductsService {
 
   async findOne(term: string) {
     let product: tblProducts;
-
     if (isUUID(term)) {
-      product = await this.productRepository.findOneBy({ Product_stringId: term });
+      product = await this.productRepository.findOneBy({
+        Product_stringId: term,
+      });
     } else {
       const queryBuilder = this.productRepository.createQueryBuilder('prod'); //se referencia el nombre de las columnas
       product = await queryBuilder
-      .where('UPPER(prod.Product_stringName)= :nameProduct or prod.Product_stringUniqueKey= :uniquekeyProduct',
-        {
-          nameProduct: term.toUpperCase(),
-          uniquekeyProduct: term.toUpperCase(),
-        }).getOne();
+        .where(
+          'UPPER(prod.Product_stringName)= :nameProduct or prod.Product_stringUniqueKey= :uniquekeyProduct',
+          {
+            nameProduct: term.toUpperCase(),
+            uniquekeyProduct: term.toUpperCase(),
+          },
+        )
+        .getOne();
     }
     if (!product) throw new NotFoundException(`Product not found`);
     return product;
   }
 
-  async findProductsByPriceRange(minPrice: number, maxPrice: number): Promise<tblProducts[]> {
+  async findProductsByPriceRange(
+    minPrice: number,
+    maxPrice: number,
+  ): Promise<tblProducts[]> {
     const queryBuilder = this.productRepository.createQueryBuilder();
     const products = await queryBuilder
-      .where('tblProducts.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice', {
-        minPrice,
-        maxPrice,
-      })
+      .where(
+        'tblProducts.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice',
+        {
+          minPrice,
+          maxPrice,
+        },
+      )
       .getMany();
-  
+
     return products;
   }
-  
 
-
-  async orderPriceAsc(){
+  async orderPriceAsc() {
     try {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       const products = await queryBuilder
-      .orderBy('prod.Product_floatPriceBuy', 'ASC')
-      .getMany();
-      return products;  
+        .orderBy('prod.Product_floatPriceBuy', 'ASC')
+        .getMany();
+      return products;
     } catch (error) {
       throw new BadRequestException('Sin datos');
     }
-    
   }
 
+  async orderPriceDesc() {
+    try {
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      const products = await queryBuilder
+        .orderBy('prod.Product_floatPriceBuy', 'DESC')
+        .getMany();
+      return products;
+    } catch (error) {
+      throw new BadRequestException('Sin datos');
+    }
+  }
 
+  async nameAsc() {
+    try {
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      const products = await queryBuilder
+        .orderBy('prod.Product_stringName', 'ASC')
+        .getMany();
+      return products;
+    } catch (error) {
+      throw new BadRequestException('Sin datos');
+    }
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  async nameDesc() {
+    try {
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      const products = await queryBuilder
+        .orderBy('prod.Product_stringName', 'DESC')
+        .getMany();
+      return products;
+    } catch (error) {
+      throw new BadRequestException('Sin datos');
+    }
+  }
 
   private handleExceptions(error: any) {
     if (error.code === '23505') throw new BadRequestException(error.detail);

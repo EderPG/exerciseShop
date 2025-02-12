@@ -1,33 +1,36 @@
-import { IsInt, IsNumber, IsOptional, IsPositive, IsString, MinLength } from "class-validator";
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
+export class CreateProductDto {
+  @IsString()
+  @MinLength(1)
+  nameProduct: string; 
 
-export class CreateProductDto{
+  @IsString()
+  @MinLength(1)
+  uniquekeyProduct: string;
 
-    @IsString()
-    @MinLength(1)
-    nameProduct: string; //solo funciona con ese nombre ¿?
+  @IsString()
+  @MinLength(1)
+  @IsOptional()
+  descriptionProduct?: string;
 
-    @IsString()
-    @MinLength(1)
-    uniquekeyProduct: string;
+  @IsNumber()
+  @IsPositive()
+  pricebuyProduct: number;
 
-    @IsString()
-    @MinLength(1)
-    @IsOptional()
-    descriptionProduct?: string;
+  @IsNumber()
+  @IsPositive()
+  pricesellProduct: number;
 
-    @IsNumber()
-    @IsPositive()
-    pricebuyProduct: number;
-
-    @IsNumber()
-    @IsPositive()
-    pricesellProduct: number;
-
-    @IsInt()
-    @IsPositive()
-    @IsOptional()
-    stockProduct?: number;
-
-    
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  stockProduct?: number;
 }
