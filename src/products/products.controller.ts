@@ -3,10 +3,9 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
+  Patch,
   Delete,
-  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
