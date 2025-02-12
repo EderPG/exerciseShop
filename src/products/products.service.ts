@@ -22,12 +22,22 @@ export class ProductsService {
     private readonly datasource: DataSource,
   ) {}
 
+  private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
+    return {
+      Product_stringName: dto.nameProduct,
+      Product_stringUniqueKey: dto.uniquekeyProduct,
+      Product_stringDescription: dto.descriptionProduct,
+      Product_floatPriceBuy: dto.pricebuyProduct,
+      Product_floatPriceSell: dto.pricesellProduct,
+      Product_intStock: dto.stockProduct,
+    };
+  }
+
   async create(createProductDto: CreateProductDto) {
     try {
-      const { ...productDetails } = createProductDto; //donde se guardaran datos
-      const product = this.productRepository.create({...productDetails,});
-      await this.productRepository.save(product);
-      return { ...product };
+      const productData = this.mapDtoToEntity(createProductDto);
+    const newProduct = this.productRepository.create(productData); 
+    return await this.productRepository.save(newProduct);
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -47,9 +57,9 @@ export class ProductsService {
     if (isUUID(term)) {
       product = await this.productRepository.findOneBy({ Product_stringId: term });
     } else {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      const queryBuilder = this.productRepository.createQueryBuilder('prod'); //se referencia el nombre de las columnas
       product = await queryBuilder
-      .where('UPPER(Product_stringName)= :Product_stringName or uniquekeyProduct= :Product_stringUniqueKey',
+      .where('UPPER(prod.Product_stringName)= :nameProduct or prod.Product_stringUniqueKey= :uniquekeyProduct',
         {
           nameProduct: term.toUpperCase(),
           uniquekeyProduct: term.toUpperCase(),
@@ -60,9 +70,7 @@ export class ProductsService {
   }
 
   async findProductsByPriceRange(minPrice: number, maxPrice: number): Promise<tblProducts[]> {
-    
     const queryBuilder = this.productRepository.createQueryBuilder();
-    
     const products = await queryBuilder
       .where('tblProducts.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice', {
         minPrice,

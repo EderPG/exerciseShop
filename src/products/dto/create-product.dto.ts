@@ -5,7 +5,7 @@ export class CreateProductDto{
 
     @IsString()
     @MinLength(1)
-    Product_stringName: string; //solo funciona con ese nombre ¿?
+    nameProduct: string; //solo funciona con ese nombre ¿?
 
     @IsString()
     @MinLength(1)
@@ -29,4 +29,5 @@ export class CreateProductDto{
     @IsOptional()
     stockProduct?: number;
 
+    
 }
