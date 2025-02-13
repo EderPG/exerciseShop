@@ -23,7 +23,7 @@ export class ProductsService {
 
   private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
     return {
-      Product_stringName: dto.nameProduct, //Product_stringName
+      Product_stringName: dto.nameProduct, 
       Product_stringUniqueKey: dto.uniquekeyProduct,
       Product_stringDescription: dto.descriptionProduct,
       Product_floatPriceBuy: dto.pricebuyProduct,

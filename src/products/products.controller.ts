@@ -28,7 +28,7 @@ export class ProductsController {
   }
 
   
-  @Get('RangePrice') //
+  @Get('RangePrice') 
   getProductsPriceRange(
       @Query('minPrice') minPrice: number,
       @Query('maxPrice') maxPrice: number,
