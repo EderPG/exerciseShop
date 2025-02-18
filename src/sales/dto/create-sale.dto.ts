@@ -1,4 +1,10 @@
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class SaleItemDto {
@@ -12,10 +18,6 @@ class SaleItemDto {
   @IsNotEmpty()
   @IsNumber()
   Product_floatPriceSell: number;
-
-  @IsOptional()
-  @IsNumber()
-  Product_floatDiscount?: number;
 }
 
 export class CreateSaleDto {

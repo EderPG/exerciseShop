@@ -10,7 +10,7 @@ import {
 export class CreateProductDto {
   @IsString()
   @MinLength(1)
-  nameProduct: string; 
+  nameProduct: string;
 
   @IsString()
   @MinLength(1)

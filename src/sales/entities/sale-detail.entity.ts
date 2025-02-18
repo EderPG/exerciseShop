@@ -4,31 +4,28 @@ import { Sale } from './sale.entity';
 @Entity()
 export class SaleDetail {
   @PrimaryGeneratedColumn('uuid')
-  SaleDetail_stringId: string;
+  SaleDetail_strgId: string;
 
   @Column('text')
-  Product_stringDescription: string;
+  Product_strDescription: string;
 
   @Column('int')
   Product_intQuantity: number;
 
   @Column('float')
-  Product_floatPriceSell: number;
+  Product_floPriceSell: number;
 
   @Column('float')
-  Product_floatTotal: number;
+  Product_floTotal: number;
 
   @Column('float')
-  Product_floatSubtotal: number;
+  Product_floSubtotal: number;
 
   @Column('float')
-  Product_floatPriceBuy: number;
+  Product_floPriceBuy: number;
 
   @Column('float')
-  Product_floatProfitPercentage: number;
-
-  @Column('float')
-  Product_floatDiscount: number;
+  Product_floProfitPercentage: number;
 
   @ManyToOne(() => Sale, (sale) => sale.SaleDetails)
   sale: Sale;

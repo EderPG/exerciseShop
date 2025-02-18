@@ -17,49 +17,46 @@ import { PaginationDto } from 'src/common/dtos/pagination.dto';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @Post()
+  @Post('addProduct')
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
 
-  @Get()
+  @Get('all')
   getAllProducts(@Query() paginationDto: PaginationDto) {
     return this.productsService.findAll(paginationDto);
   }
 
-  
-  @Get('RangePrice') 
+  @Get('RangePrice')
   getProductsPriceRange(
-      @Query('minPrice') minPrice: number,
-      @Query('maxPrice') maxPrice: number,
-    ): Promise<tblProducts[]> {
-        return this.productsService.findProductsByPriceRange(minPrice, maxPrice);
-    }
-    
-    @Get('PriceAsc')
-    getOrderAsc() {
-        return this.productsService.orderPriceAsc();
-    }
-    
-    @Get('PriceDesc')
-    getOrderDesc() {
-        return this.productsService.orderPriceDesc();
-    }
+    @Query('minPrice') minPrice: number,
+    @Query('maxPrice') maxPrice: number,
+  ): Promise<tblProducts[]> {
+    return this.productsService.findProductsByPriceRange(minPrice, maxPrice);
+  }
 
-    @Get('NameAsc')
-    getNameAsc(){
-        return this.productsService.nameAsc();
-    }
+  @Get('PriceAsc')
+  getOrderAsc() {
+    return this.productsService.orderPriceAsc();
+  }
 
-    @Get('NameDesc')
-    getNameDesc(){
-        return this.productsService.nameDesc();
-    }
+  @Get('PriceDesc')
+  getOrderDesc() {
+    return this.productsService.orderPriceDesc();
+  }
 
-    @Get('get/:term')
-    findOne(@Param('term') term: string) {
-      return this.productsService.findOne(term);
-    }
+  @Get('NameAsc')
+  getNameAsc() {
+    return this.productsService.nameAsc();
+  }
 
-  
+  @Get('NameDesc')
+  getNameDesc() {
+    return this.productsService.nameDesc();
+  }
+
+  @Get('get/:term')
+  findOne(@Param('term') term: string) {
+    return this.productsService.findOne(term);
+  }
 }

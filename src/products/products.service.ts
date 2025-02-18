@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { tblProducts } from './entities/product.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { isUUID } from 'class-validator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
@@ -23,11 +23,11 @@ export class ProductsService {
 
   private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
     return {
-      Product_stringName: dto.nameProduct, 
-      Product_stringUniqueKey: dto.uniquekeyProduct,
-      Product_stringDescription: dto.descriptionProduct,
-      Product_floatPriceBuy: dto.pricebuyProduct,
-      Product_floatPriceSell: dto.pricesellProduct,
+      Product_strName: dto.nameProduct,
+      Product_strUniqueKey: dto.uniquekeyProduct,
+      Product_strDescription: dto.descriptionProduct,
+      Product_floPriceBuy: dto.pricebuyProduct,
+      Product_floPriceSell: dto.pricesellProduct,
       Product_intStock: dto.stockProduct,
     };
   }
@@ -36,7 +36,18 @@ export class ProductsService {
     try {
       const productData = this.mapDtoToEntity(createProductDto);
       const newProduct = this.productRepository.create(productData);
-      return await this.productRepository.save(newProduct);
+      await this.productRepository.save(newProduct);
+      return {
+        message: 'Producto Creado',
+        data: {
+          nameProduct: createProductDto.nameProduct,
+          uniqueKeyProduct: createProductDto.uniquekeyProduct,
+          descriptionProduct: createProductDto.descriptionProduct,
+          priceBuyProduct: createProductDto.pricebuyProduct,
+          priceSellProduct: createProductDto.pricesellProduct,
+          stockProduct: createProductDto.stockProduct,
+        },
+      };
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -54,13 +65,13 @@ export class ProductsService {
     let product: tblProducts;
     if (isUUID(term)) {
       product = await this.productRepository.findOneBy({
-        Product_stringId: term,
+        Product_strId: term,
       });
     } else {
       const queryBuilder = this.productRepository.createQueryBuilder('prod'); //se referencia el nombre de las columnas
       product = await queryBuilder
         .where(
-          'UPPER(prod.Product_stringName)= :nameProduct or prod.Product_stringUniqueKey= :uniquekeyProduct',
+          'UPPER(prod.Product_strName)= :nameProduct or prod.Product_strUniqueKey= :uniquekeyProduct',
           {
             nameProduct: term.toUpperCase(),
             uniquekeyProduct: term.toUpperCase(),
@@ -68,7 +79,7 @@ export class ProductsService {
         )
         .getOne();
     }
-    if (!product) throw new NotFoundException(`Product not found`);
+    if (!product) throw new NotFoundException(`No existe el producto con el nombre ${term}`);
     return product;
   }
 
@@ -79,7 +90,7 @@ export class ProductsService {
     const queryBuilder = this.productRepository.createQueryBuilder();
     const products = await queryBuilder
       .where(
-        'tblProducts.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice',
+        'tblProducts.Product_floPriceSell BETWEEN :minPrice AND :maxPrice',
         {
           minPrice,
           maxPrice,
@@ -94,7 +105,7 @@ export class ProductsService {
     try {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       const products = await queryBuilder
-        .orderBy('prod.Product_floatPriceBuy', 'ASC')
+        .orderBy('prod.Product_floPriceBuy', 'ASC')
         .getMany();
       return products;
     } catch (error) {
@@ -106,7 +117,7 @@ export class ProductsService {
     try {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       const products = await queryBuilder
-        .orderBy('prod.Product_floatPriceBuy', 'DESC')
+        .orderBy('prod.Product_floPriceBuy', 'DESC')
         .getMany();
       return products;
     } catch (error) {
@@ -118,7 +129,7 @@ export class ProductsService {
     try {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       const products = await queryBuilder
-        .orderBy('prod.Product_stringName', 'ASC')
+        .orderBy('prod.Product_strName', 'ASC')
         .getMany();
       return products;
     } catch (error) {
@@ -130,7 +141,7 @@ export class ProductsService {
     try {
       const queryBuilder = this.productRepository.createQueryBuilder('prod');
       const products = await queryBuilder
-        .orderBy('prod.Product_stringName', 'DESC')
+        .orderBy('prod.Product_strName', 'DESC')
         .getMany();
       return products;
     } catch (error) {
