@@ -4,8 +4,10 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Min,
   MinLength,
 } from 'class-validator';
+
 
 export class CreateProductDto {
   @IsString()
@@ -23,11 +25,13 @@ export class CreateProductDto {
 
   @IsNumber()
   @IsPositive()
-  pricebuyProduct: number;
+  @Min(0)
+  priceBuyProduct: number;
 
   @IsNumber()
   @IsPositive()
-  pricesellProduct: number;
+  @Min(0)
+  priceSellProduct: number;
 
   @IsInt()
   @IsPositive()

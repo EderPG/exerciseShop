@@ -9,7 +9,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { tblProducts } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
-import { isUUID } from 'class-validator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
@@ -26,8 +25,8 @@ export class ProductsService {
       Product_strName: dto.nameProduct,
       Product_strUniqueKey: dto.uniquekeyProduct,
       Product_strDescription: dto.descriptionProduct,
-      Product_floPriceBuy: dto.pricebuyProduct,
-      Product_floPriceSell: dto.pricesellProduct,
+      Product_floPriceBuy: dto.priceBuyProduct,
+      Product_floPriceSell: dto.priceSellProduct,
       Product_intStock: dto.stockProduct,
     };
   }
@@ -43,8 +42,8 @@ export class ProductsService {
           nameProduct: createProductDto.nameProduct,
           uniqueKeyProduct: createProductDto.uniquekeyProduct,
           descriptionProduct: createProductDto.descriptionProduct,
-          priceBuyProduct: createProductDto.pricebuyProduct,
-          priceSellProduct: createProductDto.pricesellProduct,
+          priceBuyProduct: createProductDto.priceBuyProduct,
+          priceSellProduct: createProductDto.priceSellProduct,
           stockProduct: createProductDto.stockProduct,
         },
       };
@@ -53,100 +52,43 @@ export class ProductsService {
     }
   }
 
-  findAll(paginationDto: PaginationDto) {
-    const { limit = 10, offset = 0 } = paginationDto;
-    return this.productRepository.find({
-      take: limit,
-      skip: offset,
-    });
-  }
-
-  async findOne(term: string) {
-    let product: tblProducts;
-    if (isUUID(term)) {
-      product = await this.productRepository.findOneBy({
-        Product_strId: term,
-      });
-    } else {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod'); //se referencia el nombre de las columnas
-      product = await queryBuilder
-        .where(
-          'UPPER(prod.Product_strName)= :nameProduct or prod.Product_strUniqueKey= :uniquekeyProduct',
-          {
-            nameProduct: term.toUpperCase(),
-            uniquekeyProduct: term.toUpperCase(),
-          },
-        )
-        .getOne();
-    }
-    if (!product) throw new NotFoundException(`No existe el producto con el nombre ${term}`);
-    return product;
-  }
-
-  async findProductsByPriceRange(
-    minPrice: number,
-    maxPrice: number,
+  async findAllWithFilters(
+    paginationDto: PaginationDto,
   ): Promise<tblProducts[]> {
-    const queryBuilder = this.productRepository.createQueryBuilder();
-    const products = await queryBuilder
-      .where(
-        'tblProducts.Product_floPriceSell BETWEEN :minPrice AND :maxPrice',
+    const {
+      limit = 10,
+      offset = 0,
+      minPrice,
+      maxPrice,
+      orderBy,
+      orderDirection,
+      searchTerm,
+    } = paginationDto;
+    const queryBuilder = this.productRepository.createQueryBuilder('prod');
+
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      queryBuilder.andWhere(
+        'prod.Product_floPriceSell BETWEEN :minPrice AND :maxPrice',
         {
           minPrice,
           maxPrice,
         },
-      )
-      .getMany();
-
-    return products;
-  }
-
-  async orderPriceAsc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_floPriceBuy', 'ASC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
+      );
     }
-  }
 
-  async orderPriceDesc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_floPriceBuy', 'DESC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
+    if (searchTerm) {
+      queryBuilder.andWhere(
+        '(UPPER(prod.Product_strName) LIKE :searchTerm OR UPPER(prod.Product_strUniqueKey) LIKE :searchTerm)',
+        { searchTerm: `%${searchTerm.toUpperCase()}%` },
+      );
     }
-  }
 
-  async nameAsc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_strName', 'ASC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
+    if (orderBy && orderDirection) {
+      queryBuilder.orderBy(`prod.${orderBy}`, orderDirection);
     }
-  }
+    queryBuilder.take(limit).skip(offset);
 
-  async nameDesc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_strName', 'DESC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
-    }
+    return queryBuilder.getMany();
   }
 
   private handleExceptions(error: any) {
