@@ -13,10 +13,7 @@ export class ProductsController {
   }
 
   @Get('filter')
-  getProducts(
-    @Query() paginationDto: PaginationDto) {
+  getProducts(@Query() paginationDto: PaginationDto) {
     return this.productsService.findAllWithFilters(paginationDto);
   }
-
-  
 }

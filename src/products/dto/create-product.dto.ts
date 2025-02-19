@@ -16,7 +16,7 @@ export class CreateProductDto {
 
   @IsString()
   @MinLength(1)
-  uniquekeyProduct: string;
+  uniqueKeyProduct: string;
 
   @IsString()
   @MinLength(1)

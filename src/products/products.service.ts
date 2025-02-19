@@ -23,7 +23,7 @@ export class ProductsService {
   private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
     return {
       Product_strName: dto.nameProduct,
-      Product_strUniqueKey: dto.uniquekeyProduct,
+      Product_strUniqueKey: dto.uniqueKeyProduct,
       Product_strDescription: dto.descriptionProduct,
       Product_floPriceBuy: dto.priceBuyProduct,
       Product_floPriceSell: dto.priceSellProduct,
@@ -40,7 +40,7 @@ export class ProductsService {
         message: 'Producto Creado',
         data: {
           nameProduct: createProductDto.nameProduct,
-          uniqueKeyProduct: createProductDto.uniquekeyProduct,
+          uniqueKeyProduct: createProductDto.uniqueKeyProduct,
           descriptionProduct: createProductDto.descriptionProduct,
           priceBuyProduct: createProductDto.priceBuyProduct,
           priceSellProduct: createProductDto.priceSellProduct,
@@ -54,7 +54,7 @@ export class ProductsService {
 
   async findAllWithFilters(
     paginationDto: PaginationDto,
-  ): Promise<tblProducts[]> {
+  ): Promise<{ message: string; data: any[] }> {
     const {
       limit = 10,
       offset = 0,
@@ -88,7 +88,21 @@ export class ProductsService {
     }
     queryBuilder.take(limit).skip(offset);
 
-    return queryBuilder.getMany();
+    const products = await queryBuilder.getMany();
+
+    const formattedProducts = products.map((product) => ({
+      nameProduct: product.Product_strName,
+      uniqueKeyProduct: product.Product_strUniqueKey,
+      descriptionProduct: product.Product_strDescription,
+      priceBuyProduct: product.Product_floPriceBuy,
+      priceSellProduct: product.Product_floPriceSell,
+      stockProduct: product.Product_intStock,
+    }));
+
+    return {
+      message: 'Consulta realizada con éxito',
+      data: formattedProducts,
+    };
   }
 
   private handleExceptions(error: any) {
