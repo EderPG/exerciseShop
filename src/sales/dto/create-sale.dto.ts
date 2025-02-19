@@ -14,10 +14,6 @@ class SaleItemDto {
   @IsNotEmpty()
   @IsNumber()
   Product_intQuantity: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  Product_floatPriceSell: number;
 }
 
 export class CreateSaleDto {

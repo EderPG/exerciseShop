@@ -1,32 +1,32 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Sale } from './sale.entity';
+import { tblSales } from './sale.entity';
 
-@Entity()
-export class SaleDetail {
+@Entity('tblSaleDetails')
+export class tblSaleDetails {
   @PrimaryGeneratedColumn('uuid')
-  SaleDetail_strgId: string;
+  SaleDetail_uuidId: string;
 
-  @Column('text')
-  Product_strDescription: string;
+  @Column('text', { nullable: true })
+  SaleDetail_strDescription: string;
 
   @Column('int')
-  Product_intQuantity: number;
+  SaleDetail_intQuantity: number;
 
   @Column('float')
-  Product_floPriceSell: number;
+  SaleDetail_floPriceSell: number;
 
   @Column('float')
-  Product_floTotal: number;
+  SaleDetail_floTotal: number;
 
   @Column('float')
-  Product_floSubtotal: number;
+  SaleDetail_floSubtotal: number;
 
   @Column('float')
-  Product_floPriceBuy: number;
+  SaleDetail_floPriceBuy: number;
 
   @Column('float')
-  Product_floProfitPercentage: number;
+  SaleDetail_floProfitPercentage: number;
 
-  @ManyToOne(() => Sale, (sale) => sale.SaleDetails)
-  sale: Sale;
+  @ManyToOne(() => tblSales, (sale) => sale.SaleDetails)
+  Sale: tblSales;
 }

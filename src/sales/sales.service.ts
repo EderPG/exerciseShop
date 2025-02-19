@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Sale } from './entities/sale.entity';
-import { SaleDetail } from './entities/sale-detail.entity';
+import { tblSales } from './entities/sale.entity';
+import { tblSaleDetails } from './entities/sale-detail.entity';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { tblProducts } from '../products/entities/product.entity';
 
@@ -11,12 +11,15 @@ export class SalesService {
   private readonly logger = new Logger('SalesService');
 
   constructor(
-    @InjectRepository(Sale)
-    private readonly saleRepository: Repository<Sale>,
-    @InjectRepository(SaleDetail)
-    private readonly saleDetailRepository: Repository<SaleDetail>,
+    @InjectRepository(tblSales)
+    private readonly saleRepository: Repository<tblSales>,
+
+    @InjectRepository(tblSaleDetails)
+    private readonly saleDetailRepository: Repository<tblSaleDetails>,
+
     @InjectRepository(tblProducts)
     private readonly productRepository: Repository<tblProducts>,
+
     private readonly datasource: DataSource,
   ) {}
 
@@ -37,50 +40,58 @@ export class SalesService {
         });
 
         if (!product) {
-          throw new Error(`Product with ID ${item.Product_stringId} not found`);
+          throw new Error(
+            `Error: Producto con ID ${item.Product_stringId} no encontrado`,
+          );
         }
 
-        const subtotal = item.Product_intQuantity * item.Product_floatPriceSell;
-        const total = subtotal;
+        const productDescription =
+          product.Product_strDescription?.trim() || 'Sin descripción';
 
+        const priceBuy = product.Product_floPriceBuy ?? 0;
+        const priceSell = product.Product_floPriceSell ?? 0;
+
+        if (priceSell <= 0) {
+          throw new Error(
+            `El producto ${product.Product_strName} tiene un precio de venta inválido.`,
+          );
+        }
+
+        const subtotal = item.Product_intQuantity * priceSell;
+        const total = subtotal;
         totalProductsSold += item.Product_intQuantity;
         totalOperation += total;
 
         const profitPercentage =
-          ((item.Product_floatPriceSell - product.Product_floPriceBuy) /
-            item.Product_floatPriceSell) *
-          100;
+          priceSell > 0 ? ((priceSell - priceBuy) / priceSell) * 100 : 0;
 
         saleDetails.push({
-          Product_strDescription: product.Product_strDescription,
-          Product_intQuantity: item.Product_intQuantity,
-          Product_floPriceSell: item.Product_floatPriceSell,
-          Product_floTotal: total,
-          Product_floSubtotal: subtotal,
-          Product_floPriceBuy: product.Product_floPriceBuy,
-          Product_floProfitPercentage: profitPercentage,
+          SaleDetail_strDescription: productDescription,
+          SaleDetail_intQuantity: item.Product_intQuantity,
+          SaleDetail_floPriceSell: priceSell,
+          SaleDetail_floTotal: total,
+          SaleDetail_floSubtotal: subtotal,
+          SaleDetail_floPriceBuy: priceBuy,
+          SaleDetail_floProfitPercentage: profitPercentage,
         });
       }
 
-      let globalDiscount = 0;
-      if (totalOperation >= 100) {
-        globalDiscount = 0.2;
-      } else {
-        globalDiscount = 0.1;
-      }
+      const globalDiscount = totalOperation >= 100 ? 0.2 : 0.1;
       const totalWithDiscount = totalOperation * (1 - globalDiscount);
 
       const sale = this.saleRepository.create({
         Sale_intTotalProductsSold: totalProductsSold,
-        Sale_floTotalOperation: totalWithDiscount,
-        Sale_dtmtSaleDate: saleDate,
+        Sale_floTotalOperation: totalOperation,
+        Sale_dtmSaleDate: saleDate,
+        SaleDetails: saleDetails,
       });
+
       await this.saleRepository.save(sale);
 
       for (const detail of saleDetails) {
         const saleDetail = this.saleDetailRepository.create({
           ...detail,
-          sale,
+          Sale: sale,
         });
         await this.saleDetailRepository.save(saleDetail);
       }
@@ -88,16 +99,17 @@ export class SalesService {
       await queryRunner.commitTransaction();
 
       return {
+        message: 'Venta procesada exitosamente',
         totalProductsSold,
-        totalOperation: totalWithDiscount,
+        totalOperation: totalWithDiscount.toFixed(2),
         saleDate,
         saleDetails,
-        globalDiscount: globalDiscount * 100,
+        globalDiscount: (globalDiscount * 100).toFixed(0) + '%',
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(error);
-      throw new Error('Error processing sale');
+      throw new Error(`Error al procesar la venta: ${error.message}`);
     } finally {
       await queryRunner.release();
     }

@@ -1,20 +1,20 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { SaleDetail } from './sale-detail.entity';
+import { tblSaleDetails } from './sale-detail.entity';
 
-@Entity()
-export class Sale {
+@Entity('tblSales')
+export class tblSales {
   @PrimaryGeneratedColumn('uuid')
-  Sale_strId: string;
+  Sale_uuidId: string;
 
-  @Column()
+  @Column('int')
   Sale_intTotalProductsSold: number;
 
   @Column('float')
   Sale_floTotalOperation: number;
 
-  @Column()
-  Sale_dtmtSaleDate: Date;
+  @Column('timestamp')
+  Sale_dtmSaleDate: Date;
 
-  @OneToMany(() => SaleDetail, (detail) => detail.sale)
-  SaleDetails: SaleDetail[];
+  @OneToMany(() => tblSaleDetails, (detail) => detail.Sale)
+  SaleDetails: tblSaleDetails[];
 }
