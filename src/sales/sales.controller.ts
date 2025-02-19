@@ -6,7 +6,7 @@ import { CreateSaleDto } from './dto/create-sale.dto';
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
-  @Post()
+  @Post('venta')
   async createSale(@Body() createSaleDto: CreateSaleDto) {
     return this.salesService.processSale(createSaleDto);
   }
