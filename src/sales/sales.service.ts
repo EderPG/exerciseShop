@@ -33,7 +33,7 @@ export class SalesService {
 
       for (const item of createSaleDto.items) {
         const product = await this.productRepository.findOne({
-          where: { Product_stringId: item.Product_stringId },
+          where: { Product_strId: item.Product_stringId },
         });
 
         if (!product) {
@@ -41,31 +41,29 @@ export class SalesService {
         }
 
         const subtotal = item.Product_intQuantity * item.Product_floatPriceSell;
-        const discount = item.Product_floatDiscount || 0;
-        const total = subtotal - discount;
+        const total = subtotal;
 
         totalProductsSold += item.Product_intQuantity;
         totalOperation += total;
 
         const profitPercentage =
-          ((item.Product_floatPriceSell - product.Product_floatPriceBuy) /
+          ((item.Product_floatPriceSell - product.Product_floPriceBuy) /
             item.Product_floatPriceSell) *
           100;
 
         saleDetails.push({
-          Product_stringDescription: product.Product_stringDescription,
+          Product_strDescription: product.Product_strDescription,
           Product_intQuantity: item.Product_intQuantity,
-          Product_floatPriceSell: item.Product_floatPriceSell,
-          Product_floatTotal: total,
-          Product_floatSubtotal: subtotal,
-          Product_floatPriceBuy: product.Product_floatPriceBuy,
-          Product_floatProfitPercentage: profitPercentage,
-          Product_floatDiscount: discount,
+          Product_floPriceSell: item.Product_floatPriceSell,
+          Product_floTotal: total,
+          Product_floSubtotal: subtotal,
+          Product_floPriceBuy: product.Product_floPriceBuy,
+          Product_floProfitPercentage: profitPercentage,
         });
       }
 
       let globalDiscount = 0;
-      if (totalOperation >= 1000) {
+      if (totalOperation >= 100) {
         globalDiscount = 0.2;
       } else {
         globalDiscount = 0.1;
@@ -74,8 +72,8 @@ export class SalesService {
 
       const sale = this.saleRepository.create({
         Sale_intTotalProductsSold: totalProductsSold,
-        Sale_floatTotalOperation: totalWithDiscount,
-        Sale_dateSaleDate: saleDate,
+        Sale_floTotalOperation: totalWithDiscount,
+        Sale_dtmtSaleDate: saleDate,
       });
       await this.saleRepository.save(sale);
 

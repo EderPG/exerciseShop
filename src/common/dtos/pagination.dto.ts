@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsPositive, Min } from 'class-validator';
+import { IsIn, IsOptional, IsPositive, IsString, Min } from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
@@ -11,4 +11,27 @@ export class PaginationDto {
   @Min(0)
   @Type(() => Number)
   offset?: number;
+
+  @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  minPrice?: number;
+
+  @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  maxPrice?: number;
+
+  @IsOptional()
+  @IsString()
+  orderBy?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['ASC', 'DESC'])
+  orderDirection?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsString()
+  searchTerm?: string;
 }

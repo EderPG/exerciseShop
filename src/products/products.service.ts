@@ -7,9 +7,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { tblProducts } from './entities/product.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
-import { isUUID } from 'class-validator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
@@ -23,11 +22,11 @@ export class ProductsService {
 
   private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
     return {
-      Product_stringName: dto.nameProduct, 
-      Product_stringUniqueKey: dto.uniquekeyProduct,
-      Product_stringDescription: dto.descriptionProduct,
-      Product_floatPriceBuy: dto.pricebuyProduct,
-      Product_floatPriceSell: dto.pricesellProduct,
+      Product_strName: dto.nameProduct,
+      Product_strUniqueKey: dto.uniqueKeyProduct,
+      Product_strDescription: dto.descriptionProduct,
+      Product_floPriceBuy: dto.priceBuyProduct,
+      Product_floPriceSell: dto.priceSellProduct,
       Product_intStock: dto.stockProduct,
     };
   }
@@ -36,106 +35,74 @@ export class ProductsService {
     try {
       const productData = this.mapDtoToEntity(createProductDto);
       const newProduct = this.productRepository.create(productData);
-      return await this.productRepository.save(newProduct);
+      await this.productRepository.save(newProduct);
+      return {
+        message: 'Producto Creado',
+        data: {
+          nameProduct: createProductDto.nameProduct,
+          uniqueKeyProduct: createProductDto.uniqueKeyProduct,
+          descriptionProduct: createProductDto.descriptionProduct,
+          priceBuyProduct: createProductDto.priceBuyProduct,
+          priceSellProduct: createProductDto.priceSellProduct,
+          stockProduct: createProductDto.stockProduct,
+        },
+      };
     } catch (error) {
       this.handleExceptions(error);
     }
   }
 
-  findAll(paginationDto: PaginationDto) {
-    const { limit = 10, offset = 0 } = paginationDto;
-    return this.productRepository.find({
-      take: limit,
-      skip: offset,
-    });
-  }
+  async findAllWithFilters(
+    paginationDto: PaginationDto,
+  ): Promise<{message:string; data:any[]}> {
+    const {
+      limit = 10,
+      offset = 0,
+      minPrice,
+      maxPrice,
+      orderBy,
+      orderDirection,
+      searchTerm,
+    } = paginationDto;
+    const queryBuilder = this.productRepository.createQueryBuilder('prod');
 
-  async findOne(term: string) {
-    let product: tblProducts;
-    if (isUUID(term)) {
-      product = await this.productRepository.findOneBy({
-        Product_stringId: term,
-      });
-    } else {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod'); //se referencia el nombre de las columnas
-      product = await queryBuilder
-        .where(
-          'UPPER(prod.Product_stringName)= :nameProduct or prod.Product_stringUniqueKey= :uniquekeyProduct',
-          {
-            nameProduct: term.toUpperCase(),
-            uniquekeyProduct: term.toUpperCase(),
-          },
-        )
-        .getOne();
-    }
-    if (!product) throw new NotFoundException(`Product not found`);
-    return product;
-  }
-
-  async findProductsByPriceRange(
-    minPrice: number,
-    maxPrice: number,
-  ): Promise<tblProducts[]> {
-    const queryBuilder = this.productRepository.createQueryBuilder();
-    const products = await queryBuilder
-      .where(
-        'tblProducts.Product_floatPriceSell BETWEEN :minPrice AND :maxPrice',
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      queryBuilder.andWhere(
+        'prod.Product_floPriceSell BETWEEN :minPrice AND :maxPrice',
         {
           minPrice,
           maxPrice,
         },
-      )
-      .getMany();
-
-    return products;
-  }
-
-  async orderPriceAsc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_floatPriceBuy', 'ASC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
+      );
     }
-  }
 
-  async orderPriceDesc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_floatPriceBuy', 'DESC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
+    if (searchTerm) {
+      queryBuilder.andWhere(
+        '(UPPER(prod.Product_strName) LIKE :searchTerm OR UPPER(prod.Product_strUniqueKey) LIKE :searchTerm)',
+        { searchTerm: `%${searchTerm.toUpperCase()}%` },
+      );
     }
-  }
 
-  async nameAsc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_stringName', 'ASC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
+    if (orderBy && orderDirection) {
+      queryBuilder.orderBy(`prod.${orderBy}`, orderDirection);
     }
-  }
+    queryBuilder.take(limit).skip(offset);
 
-  async nameDesc() {
-    try {
-      const queryBuilder = this.productRepository.createQueryBuilder('prod');
-      const products = await queryBuilder
-        .orderBy('prod.Product_stringName', 'DESC')
-        .getMany();
-      return products;
-    } catch (error) {
-      throw new BadRequestException('Sin datos');
-    }
+    const products = await queryBuilder.getMany(); 
+
+    const formattedProducts = products.map((product) => ({
+      nameProduct: product.Product_strName,
+      uniqueKeyProduct: product.Product_strUniqueKey,
+      descriptionProduct: product.Product_strDescription,
+      priceBuyProduct: product.Product_floPriceBuy,
+      priceSellProduct: product.Product_floPriceSell,
+      stockProduct: product.Product_intStock,
+    }));
+
+    return {
+      message: 'Consulta realizada con éxito',
+      data: formattedProducts,
+    };
   }
 
   private handleExceptions(error: any) {
