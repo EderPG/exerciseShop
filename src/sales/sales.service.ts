@@ -58,26 +58,29 @@ export class SalesService {
         }
 
         const subtotal = item.Product_intQuantity * priceSell;
-        const total = subtotal;
         totalProductsSold += item.Product_intQuantity;
-        totalOperation += total;
+        totalOperation += subtotal;
 
         const profitPercentage =
           priceSell > 0 ? ((priceSell - priceBuy) / priceSell) * 100 : 0;
 
         saleDetails.push({
-          SaleDetail_strDescription: productDescription,
-          SaleDetail_intQuantity: item.Product_intQuantity,
-          SaleDetail_floPriceSell: priceSell,
-          SaleDetail_floTotal: total,
-          SaleDetail_floSubtotal: subtotal,
-          SaleDetail_floPriceBuy: priceBuy,
-          SaleDetail_floProfitPercentage: profitPercentage,
+          description: productDescription,
+          quantity: item.Product_intQuantity,
+          price: priceSell,
+          subtotal: subtotal,
+          costBuy: priceBuy,
+          profitPercentage: profitPercentage,
         });
       }
 
       const globalDiscount = totalOperation >= 100 ? 0.2 : 0.1;
+
       const totalWithDiscount = totalOperation * (1 - globalDiscount);
+
+      for (const detail of saleDetails) {
+        detail.total = (detail.subtotal * (1 - globalDiscount)).toFixed(2);
+      }
 
       const sale = this.saleRepository.create({
         Sale_intTotalProductsSold: totalProductsSold,
@@ -90,7 +93,13 @@ export class SalesService {
 
       for (const detail of saleDetails) {
         const saleDetail = this.saleDetailRepository.create({
-          ...detail,
+          SaleDetail_strDescription: detail.description,
+          SaleDetail_intQuantity: detail.quantity,
+          SaleDetail_floPriceSell: detail.price,
+          SaleDetail_floTotal: detail.total,
+          SaleDetail_floSubtotal: detail.subtotal,
+          SaleDetail_floPriceBuy: detail.costBuy,
+          SaleDetail_floProfitPercentage: detail.profitPercentage,
           Sale: sale,
         });
         await this.saleDetailRepository.save(saleDetail);
