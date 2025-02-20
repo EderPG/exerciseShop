@@ -45,11 +45,10 @@ export class SalesService {
           );
         }
 
-        const productDescription =
-          product.Product_strDescription?.trim() || 'Sin descripción';
+        const productDescription = product.Product_strDescription;
 
-        const priceBuy = product.Product_floPriceBuy ?? 0;
-        const priceSell = product.Product_floPriceSell ?? 0;
+        const priceBuy = product.Product_floPriceBuy;
+        const priceSell = product.Product_floPriceSell;
 
         if (priceSell <= 0) {
           throw new Error(
@@ -75,7 +74,6 @@ export class SalesService {
       }
 
       const globalDiscount = totalOperation >= 100 ? 0.2 : 0.1;
-
       const totalWithDiscount = totalOperation * (1 - globalDiscount);
 
       for (const detail of saleDetails) {
