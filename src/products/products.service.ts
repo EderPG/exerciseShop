@@ -84,7 +84,18 @@ export class ProductsService {
     }
 
     if (orderBy && orderDirection) {
-      queryBuilder.orderBy(`prod.${orderBy}`, orderDirection);
+      const columnMap = {
+        nameProduct: 'Product_strName',
+        uniqueKeyProduct: 'Product_strUniqueKey',
+        descriptionProduct: 'Product_strDescription',
+        priceBuyProduct: 'Product_floPriceBuy',
+        priceSellProduct: 'Product_floPriceSell',
+        stockProduct: 'Product_intStock',
+      };
+      const dbColumn = columnMap[orderBy];
+      if (dbColumn) {
+        queryBuilder.orderBy(`prod.${dbColumn}`, orderDirection);
+      }
     }
     queryBuilder.take(limit).skip(offset);
 
