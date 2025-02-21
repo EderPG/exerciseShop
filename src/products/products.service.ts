@@ -56,15 +56,25 @@ export class ProductsService {
   async findAllWithFilters(
     paginationDto: PaginationDto,
   ): Promise<{ message: string; data: any[] }> {
-    const { limit = 10, offset = 0, minPrice, maxPrice, orderBy, orderDirection, searchTerm } =
-      paginationDto;
+    const {
+      limit = 10,
+      offset = 0,
+      minPrice,
+      maxPrice,
+      orderBy,
+      orderDirection,
+      searchTerm,
+    } = paginationDto;
 
     const queryBuilder = this.productRepository.createQueryBuilder('prod');
     if (minPrice !== undefined && maxPrice !== undefined) {
-      queryBuilder.andWhere('prod.Product_floPriceSell BETWEEN :minPrice AND :maxPrice', {
-        minPrice,
-        maxPrice,
-      });
+      queryBuilder.andWhere(
+        'prod.Product_floPriceSell BETWEEN :minPrice AND :maxPrice',
+        {
+          minPrice,
+          maxPrice,
+        },
+      );
     }
 
     if (searchTerm) {
