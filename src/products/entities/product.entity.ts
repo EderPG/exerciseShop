@@ -13,9 +13,7 @@ export class tblProducts {
   })
   Product_strUniqueKey: string;
 
-  @Column('text', {
-    nullable: true,
-  })
+  @Column('text')
   Product_strDescription: string;
 
   @Column('float', {
