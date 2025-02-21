@@ -42,7 +42,6 @@ export class SalesService {
       let totalOperation = 0;
       const saleDetails = [];
       const saleDate = new Date();
-
       const discount = createSaleDto.discount / 100;
 
       for (const item of createSaleDto.items) {
