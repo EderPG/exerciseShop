@@ -5,9 +5,7 @@ export class tblProducts {
   @PrimaryGeneratedColumn('uuid')
   Product_strId: string;
 
-  @Column('text', {
-    unique: false,
-  })
+  @Column('text')
   Product_strName: string;
 
   @Column('text', {
