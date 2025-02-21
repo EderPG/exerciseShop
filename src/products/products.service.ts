@@ -22,12 +22,7 @@ export class ProductsService {
     priceSellProduct: 'Product_floPriceSell',
     stockProduct: 'Product_intStock',
   };
-
-  constructor(
-    @InjectRepository(tblProducts)
-    private readonly productRepository: Repository<tblProducts>,
-  ) {}
-
+  
   private mapDtoToEntity(dto: CreateProductDto): Partial<tblProducts> {
     return {
       Product_strName: dto.nameProduct,
@@ -38,6 +33,23 @@ export class ProductsService {
       Product_intStock: dto.stockProduct,
     };
   }
+
+  private formatProductForResponse(product: tblProducts) {
+    return {
+      nameProduct: product.Product_strName,
+      uniqueKeyProduct: product.Product_strUniqueKey,
+      descriptionProduct: product.Product_strDescription,
+      priceBuyProduct: product.Product_floPriceBuy,
+      priceSellProduct: product.Product_floPriceSell,
+      stockProduct: product.Product_intStock,
+    };
+  }
+  
+  constructor(
+    @InjectRepository(tblProducts)
+    private readonly productRepository: Repository<tblProducts>,
+  ) {}
+
 
   async create(createProductDto: CreateProductDto) {
     try {
@@ -99,17 +111,6 @@ export class ProductsService {
     return {
       message: 'Consulta realizada con éxito',
       data: formattedProducts,
-    };
-  }
-
-  private formatProductForResponse(product: tblProducts) {
-    return {
-      nameProduct: product.Product_strName,
-      uniqueKeyProduct: product.Product_strUniqueKey,
-      descriptionProduct: product.Product_strDescription,
-      priceBuyProduct: product.Product_floPriceBuy,
-      priceSellProduct: product.Product_floPriceSell,
-      stockProduct: product.Product_intStock,
     };
   }
 
