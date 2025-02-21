@@ -3,17 +3,25 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { tblProducts } from './entities/product.entity';
 import { Repository } from 'typeorm';
+import { tblProducts } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class ProductsService {
   private readonly logger = new Logger('ProductsService');
+
+  private readonly columnMap = {
+    nameProduct: 'Product_strName',
+    uniqueKeyProduct: 'Product_strUniqueKey',
+    descriptionProduct: 'Product_strDescription',
+    priceBuyProduct: 'Product_floPriceBuy',
+    priceSellProduct: 'Product_floPriceSell',
+    stockProduct: 'Product_intStock',
+  };
 
   constructor(
     @InjectRepository(tblProducts)
@@ -38,14 +46,7 @@ export class ProductsService {
       await this.productRepository.save(newProduct);
       return {
         message: 'Producto Creado',
-        data: {
-          nameProduct: createProductDto.nameProduct,
-          uniqueKeyProduct: createProductDto.uniqueKeyProduct,
-          descriptionProduct: createProductDto.descriptionProduct,
-          priceBuyProduct: createProductDto.priceBuyProduct,
-          priceSellProduct: createProductDto.priceSellProduct,
-          stockProduct: createProductDto.stockProduct,
-        },
+        data: createProductDto,
       };
     } catch (error) {
       this.handleExceptions(error);
@@ -55,25 +56,15 @@ export class ProductsService {
   async findAllWithFilters(
     paginationDto: PaginationDto,
   ): Promise<{ message: string; data: any[] }> {
-    const {
-      limit = 10,
-      offset = 0,
-      minPrice,
-      maxPrice,
-      orderBy,
-      orderDirection,
-      searchTerm,
-    } = paginationDto;
-    const queryBuilder = this.productRepository.createQueryBuilder('prod');
+    const { limit = 10, offset = 0, minPrice, maxPrice, orderBy, orderDirection, searchTerm } =
+      paginationDto;
 
+    const queryBuilder = this.productRepository.createQueryBuilder('prod');
     if (minPrice !== undefined && maxPrice !== undefined) {
-      queryBuilder.andWhere(
-        'prod.Product_floPriceSell BETWEEN :minPrice AND :maxPrice',
-        {
-          minPrice,
-          maxPrice,
-        },
-      );
+      queryBuilder.andWhere('prod.Product_floPriceSell BETWEEN :minPrice AND :maxPrice', {
+        minPrice,
+        maxPrice,
+      });
     }
 
     if (searchTerm) {
@@ -84,41 +75,36 @@ export class ProductsService {
     }
 
     if (orderBy && orderDirection) {
-      const columnMap = {
-        nameProduct: 'Product_strName',
-        uniqueKeyProduct: 'Product_strUniqueKey',
-        descriptionProduct: 'Product_strDescription',
-        priceBuyProduct: 'Product_floPriceBuy',
-        priceSellProduct: 'Product_floPriceSell',
-        stockProduct: 'Product_intStock',
-      };
-      const dbColumn = columnMap[orderBy];
+      const dbColumn = this.columnMap[orderBy];
       if (dbColumn) {
         queryBuilder.orderBy(`prod.${dbColumn}`, orderDirection);
       }
     }
+
     queryBuilder.take(limit).skip(offset);
-
     const products = await queryBuilder.getMany();
-
-    const formattedProducts = products.map((product) => ({
-      nameProduct: product.Product_strName,
-      uniqueKeyProduct: product.Product_strUniqueKey,
-      descriptionProduct: product.Product_strDescription,
-      priceBuyProduct: product.Product_floPriceBuy,
-      priceSellProduct: product.Product_floPriceSell,
-      stockProduct: product.Product_intStock,
-    }));
-
+    const formattedProducts = products.map((product) =>
+      this.formatProductForResponse(product),
+    );
     return {
       message: 'Consulta realizada con éxito',
       data: formattedProducts,
     };
   }
 
+  private formatProductForResponse(product: tblProducts) {
+    return {
+      nameProduct: product.Product_strName,
+      uniqueKeyProduct: product.Product_strUniqueKey,
+      descriptionProduct: product.Product_strDescription,
+      priceBuyProduct: product.Product_floPriceBuy,
+      priceSellProduct: product.Product_floPriceSell,
+      stockProduct: product.Product_intStock,
+    };
+  }
+
   private handleExceptions(error: any) {
     if (error.code === '23505') throw new BadRequestException(error.detail);
-
     this.logger.error(error);
     throw new InternalServerErrorException(
       'Unexpected error, check server logs',
