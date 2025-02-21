@@ -1,19 +1,20 @@
 import {
   IsArray,
   IsNotEmpty,
-  IsNumber,
-  IsOptional,
   ValidateNested,
+  IsNumber,
+  IsPositive,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class SaleItemDto {
   @IsNotEmpty()
-  Product_stringId: string;
+  productId: string;
 
   @IsNotEmpty()
   @IsNumber()
-  Product_intQuantity: number;
+  @IsPositive()
+  quantity: number;
 }
 
 export class CreateSaleDto {
@@ -21,4 +22,9 @@ export class CreateSaleDto {
   @ValidateNested({ each: true })
   @Type(() => SaleItemDto)
   items: SaleItemDto[];
+
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  discount: number;
 }

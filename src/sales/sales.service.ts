@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { tblSales } from './entities/sale.entity';
@@ -29,62 +34,60 @@ export class SalesService {
     await queryRunner.startTransaction();
 
     try {
+      if (createSaleDto.discount !== 10 && createSaleDto.discount !== 20) {
+        throw new BadRequestException('El descuento debe ser del 10% o 20%.');
+      }
+
       let totalProductsSold = 0;
       let totalOperation = 0;
       const saleDetails = [];
       const saleDate = new Date();
 
+      const discount = createSaleDto.discount / 100;
+
       for (const item of createSaleDto.items) {
         const product = await this.productRepository.findOne({
-          where: { Product_strId: item.Product_stringId },
+          where: { Product_strId: item.productId },
         });
 
         if (!product) {
-          throw new Error(
-            `Error: Producto con ID ${item.Product_stringId} no encontrado`,
+          throw new NotFoundException(
+            `Producto con ID ${item.productId} no encontrado`,
           );
         }
 
-        const productDescription = product.Product_strDescription;
-
+        const name = product.Product_strName;
+        const description = product.Product_strDescription;
         const priceBuy = product.Product_floPriceBuy;
         const priceSell = product.Product_floPriceSell;
-
-        if (priceSell <= 0) {
-          throw new Error(
-            `El producto ${product.Product_strName} tiene un precio de venta inválido.`,
-          );
-        }
-
-        const subtotal = item.Product_intQuantity * priceSell;
-        totalProductsSold += item.Product_intQuantity;
+        const subtotal = item.quantity * priceSell;
+        totalProductsSold += item.quantity;
         totalOperation += subtotal;
 
         const profitPercentage =
           priceSell > 0 ? ((priceSell - priceBuy) / priceSell) * 100 : 0;
 
         saleDetails.push({
-          description: productDescription,
-          quantity: item.Product_intQuantity,
+          name,
+          description,
+          quantity: item.quantity,
           price: priceSell,
-          subtotal: subtotal,
           costBuy: priceBuy,
           profitPercentage: profitPercentage,
+          subtotal: subtotal,
         });
       }
 
-      const globalDiscount = totalOperation >= 100 ? 0.2 : 0.1;
-      const totalWithDiscount = totalOperation * (1 - globalDiscount);
+      const totalWithDiscount = totalOperation * (1 - discount);
 
       for (const detail of saleDetails) {
-        detail.total = (detail.subtotal * (1 - globalDiscount)).toFixed(2);
+        detail.total = (detail.subtotal * (1 - discount)).toFixed(2);
       }
 
       const sale = this.saleRepository.create({
         Sale_intTotalProductsSold: totalProductsSold,
-        Sale_floTotalOperation: totalOperation,
+        Sale_floTotalOperation: totalWithDiscount,
         Sale_dtmSaleDate: saleDate,
-        SaleDetails: saleDetails,
       });
 
       await this.saleRepository.save(sale);
@@ -111,12 +114,22 @@ export class SalesService {
         totalOperation: totalWithDiscount.toFixed(2),
         saleDate,
         saleDetails,
-        globalDiscount: (globalDiscount * 100).toFixed(0) + '%',
+        discount: `${createSaleDto.discount}%`,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error(error);
-      throw new Error(`Error al procesar la venta: ${error.message}`);
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      } else {
+        throw new BadRequestException(
+          'Error al procesar la venta. Por favor, inténtelo de nuevo.',
+        );
+      }
     } finally {
       await queryRunner.release();
     }
